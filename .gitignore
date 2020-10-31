@@ -99,7 +99,7 @@ fabric.properties
 hs_err_pid*
 
 ### Gradle template
-.gradle
+.gradle/
 **/build/
 !src/**/build/
 

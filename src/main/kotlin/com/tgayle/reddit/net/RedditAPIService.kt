@@ -1,0 +1,32 @@
+package com.tgayle.reddit.net
+
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.tgayle.reddit.models.Listing
+import com.tgayle.reddit.models.Link
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType
+import retrofit2.Retrofit
+import retrofit2.http.GET
+
+interface RedditAPIService {
+    companion object {
+        const val BASE_REDDIT_URL = "https://reddit.com"
+
+        fun defaultClient(): RedditAPIService {
+            val jsonConverter = Json {
+                ignoreUnknownKeys = true
+                encodeDefaults = true
+            }.asConverterFactory(MediaType.get("application/json"))
+
+            return Retrofit.Builder()
+                .baseUrl(BASE_REDDIT_URL)
+                .addConverterFactory(jsonConverter)
+                .build()
+                .create(RedditAPIService::class.java)
+        }
+    }
+
+    @GET("/.json")
+    suspend fun getFrontPage(): Listing<Link>
+
+}
