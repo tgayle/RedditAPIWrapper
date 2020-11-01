@@ -1,5 +1,8 @@
 package com.tgayle.reddit.models
 
+import com.tgayle.reddit.models.base.Created
+import com.tgayle.reddit.models.base.Votable
+import com.tgayle.reddit.net.DoubleAsLongSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -56,10 +59,19 @@ data class Link(
     val selftext: String,
 
     @SerialName("ups")
-    val upvotes: Int,
-    val created: Double,
+    override val upvotes: Int,
+
+    @SerialName("downs")
+    override val downvotes: Int,
+
+    @Serializable(DoubleAsLongSerializer::class)
+    override val created: Long,
+
+    @Serializable(DoubleAsLongSerializer::class)
+    @SerialName("created_utc")
+    override val createdUtc: Long,
     val author: String,
     val title: String
-): Thing() {
+): Thing(), Votable, Created {
     override val kind: Kind = Kind.Link
 }

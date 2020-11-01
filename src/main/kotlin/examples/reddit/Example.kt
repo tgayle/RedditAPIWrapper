@@ -29,7 +29,8 @@ fun main() {
             println("""
                 ${post.title}
                 /u/${post.author} - ${(System.currentTimeMillis() / 1000) - post.created} seconds ago
-                /r/${post.subreddit}
+                /r/${post.subreddit} - ${post.upvotes}/${post.downvotes}
+                ${post.created} ${post.createdUtc}
                 
                 
             """.trimIndent())
