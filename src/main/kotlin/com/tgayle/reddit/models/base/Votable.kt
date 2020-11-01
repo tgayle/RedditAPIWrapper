@@ -12,6 +12,10 @@ interface Votable {
     @SerialName("downs")
     val downvotes: Int
 
+    /**
+     * Whether the current user has liked a [Thing]. True represents an upvote,
+     * false a downvote, and null represents no vote.
+     */
     @SerialName("likes")
-    val liked: Boolean get() = false
+    val liked: Boolean? get() = null
 }
