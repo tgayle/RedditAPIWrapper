@@ -28,6 +28,8 @@ sealed class Thing {
     }
 }
 
+// TODO: Resolve correct sealed class when given a [Listing]
+
 @Serializable
 data class Link(
     override val id: String,
