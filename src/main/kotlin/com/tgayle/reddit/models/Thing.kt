@@ -3,13 +3,29 @@ package com.tgayle.reddit.models
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * A [Thing] is the base of all Reddit entities.
+ */
 @Serializable
 sealed class Thing {
     abstract val id: String
+
+    /**
+     * An identifier identifying the [Thing]'s type.
+     *
+     * @see Kind
+     */
     abstract val kind: Kind
 
-    val fullName get() = "${kind.prefix}_$id"
+    /**
+     * A [Thing]'s full name, comprised of its [Kind] and its id.
+     */
+    val name get() = "${kind.prefix}_$id"
 
+    /**
+     * An identifier representing a [Thing]'s type. Each [Kind] has a string
+     * value which when combined with a [Thing]'s id, creates a [Thing]'s name.
+     */
     enum class Kind(val prefix: String) {
         Comment("t1"),
         Account("t2"),

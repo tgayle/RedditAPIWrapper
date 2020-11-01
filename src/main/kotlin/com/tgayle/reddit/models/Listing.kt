@@ -2,6 +2,10 @@ package com.tgayle.reddit.models
 
 import kotlinx.serialization.Serializable
 
+/**
+ * A Reddit structure used for paginating content. The [Data.before] and [Data.after]
+ * properties can be used to retrieve content relative to a specific [Thing].
+ */
 @Serializable
 data class Listing<T: Thing>(
     val kind: String,
