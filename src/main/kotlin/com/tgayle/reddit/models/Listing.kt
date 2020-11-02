@@ -10,9 +10,9 @@ import kotlinx.serialization.Serializable
 data class Listing<T: Thing>(
     val kind: String,
     val data: Data<T>
-) {
+): Iterable<T> {
 
-    operator fun iterator(): Iterator<T> {
+    override operator fun iterator(): Iterator<T> {
         return data.children.asSequence().map { it.data }.iterator()
     }
 

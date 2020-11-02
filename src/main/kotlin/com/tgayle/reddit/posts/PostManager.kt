@@ -7,7 +7,6 @@ class PostManager(private val client: RedditAPIService) {
 
     suspend fun getFrontPage() = client.getFrontPage()
 
-    suspend fun Link.comments() {
-
-    }
+    suspend fun getComments(subreddit: String, linkId: String) = client.getComments(subreddit, linkId)
+    suspend fun Link.comments() = client.getComments(this.subreddit, this.id)
 }

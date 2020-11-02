@@ -1,6 +1,7 @@
 package examples.reddit
 
 import com.tgayle.reddit.RedditAPI
+import com.tgayle.reddit.models.EditedState
 import com.tgayle.reddit.models.Link
 import com.tgayle.reddit.models.Listing
 import kotlinx.coroutines.flow.*
@@ -23,10 +24,29 @@ fun main() {
 //                .filter { it.upvotes > 30000 }
 //                .collect()
 
-        val posts = api.posts.getFrontPage()
+//        frontPageExample(api)
 
-        for (post in posts) {
-            println("""
+        val comments = api.posts.getComments("homeassistant", "jlecaq").forEach { listing ->
+            println("${listing.data.children.size} items loaded.")
+
+            for (comment in listing) {
+                println("""
+                    ${comment.body}
+                    
+                    /u/${comment.author} - ${comment.created} - ${comment.edited is EditedState.Edited}
+                    score: ${comment.score} upvotes: ${comment.upvotes} downvotes: ${comment.downvotes}
+                """.trimIndent())
+            }
+        }
+
+    }
+}
+
+suspend fun frontPageExample(api: RedditAPI) {
+    val posts = api.posts.getFrontPage()
+
+    for (post in posts) {
+        println("""
                 ${post.title}
                 /u/${post.author} - ${(System.currentTimeMillis() / 1000) - post.created} seconds ago
                 /r/${post.subreddit} - ${post.upvotes}/${post.downvotes}
@@ -35,7 +55,5 @@ fun main() {
                 
                 
             """.trimIndent())
-        }
     }
-
 }

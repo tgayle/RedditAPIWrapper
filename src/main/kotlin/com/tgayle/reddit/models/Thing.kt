@@ -94,7 +94,7 @@ data class Comment(
         val authorFlairText: String? = null,
         @SerialName("banned_by")
         val bannedBy: String? = null,
-        val body: String,
+        val body: String, // TODO: Properly deserialize posts/comments, and look into processing stuff via OAuth.ys
         @SerialName("body_html")
         val bodyHtml: String,
         // TODO: special prop
@@ -128,7 +128,7 @@ data class Comment(
         val parentId: String,
         val replies: List<Thing>,
         val saved: Boolean,
-        val scope: Int,
+        val score: Int,
         @SerialName("score_hidden")
         val scoreHidden: Boolean,
         val subreddit: String,
