@@ -1,6 +1,8 @@
 package examples.reddit
 
 import com.tgayle.reddit.RedditAPI
+import com.tgayle.reddit.RedditClient
+import com.tgayle.reddit.auth.Anonymous
 import com.tgayle.reddit.auth.AuthenticationStrategy
 import com.tgayle.reddit.auth.Script
 import com.tgayle.reddit.models.ClientId
@@ -12,7 +14,7 @@ import kotlinx.coroutines.runBlocking
 
 fun main() {
 
-    val api = RedditAPI(ClientId("4nQ5Hw_PASBCFw"))
+//    val api = RedditAPI()
 
     runBlocking {
         // Example desired use case:
@@ -31,7 +33,9 @@ fun main() {
 
 //        commentsExample(api)
 
-        scriptAuthTest(api)
+//        scriptAuthTest(api)
+
+        userlessAuthTest()
     }
 }
 

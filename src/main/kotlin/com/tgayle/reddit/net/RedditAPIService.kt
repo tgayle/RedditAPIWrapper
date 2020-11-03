@@ -1,11 +1,8 @@
 package com.tgayle.reddit.net
 
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.tgayle.reddit.models.Comment
 import com.tgayle.reddit.models.Listing
 import com.tgayle.reddit.models.Link
-import kotlinx.serialization.json.Json
-import okhttp3.MediaType
 import retrofit2.Retrofit
 import retrofit2.http.GET
 import retrofit2.http.Path

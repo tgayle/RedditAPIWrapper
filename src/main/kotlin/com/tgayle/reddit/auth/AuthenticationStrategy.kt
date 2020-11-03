@@ -14,6 +14,8 @@ sealed class AuthenticationStrategy(val secret: String) {
     internal val authenticationService = AuthenticationService.defaultClient()
 
     abstract suspend fun authenticate(clientId: ClientId): AuthenticationState
+
+    open suspend fun refresh(clientId: ClientId): AuthenticationState = authenticate(clientId)
 }
 
 sealed class GrantType(val type: String) {
@@ -21,7 +23,7 @@ sealed class GrantType(val type: String) {
     object RefreshToken: GrantType("refresh_token")
     object Standard: GrantType("authorization_code")
     object Anonymous: GrantType("client_credentials")
-    data class AnonymousApplication(val deviceId: String): GrantType("https://oauth.reddit.com/grants/installed_client")
+    data class AnonymousInstalled(val deviceId: String): GrantType("https://oauth.reddit.com/grants/installed_client")
 }
 
 @Serializable
@@ -36,6 +38,7 @@ data class AuthenticationState(
 ) {
 
     val expirationTime = System.currentTimeMillis() + (expiresIn * 1000)
+    val expired get() = expirationTime < System.currentTimeMillis()
 }
 
 class WebApp(secret: String): AuthenticationStrategy(secret) {
@@ -77,8 +80,28 @@ class Script(secret: String, val username: String, val password: String): Authen
 
     override suspend fun authenticate(clientId: ClientId): AuthenticationState {
         val headers = mapOf(
-                "Authorization" to "Basic " + Base64.getEncoder().encodeToString("${clientId.id}:$secret".encodeToByteArray()).also(::println)
+                "Authorization" to "Basic " + "${clientId.id}:$secret".base64()
         )
         return authenticationService.getAccessToken(encodeToFieldMap(ScriptAuthenticationParams(username, password)).also(::println), headers)
     }
+}
+
+class Anonymous(secret: String): AuthenticationStrategy(secret) {
+
+    override suspend fun authenticate(clientId: ClientId): AuthenticationState {
+        val headers = mapOf(
+            "Authorization" to "Basic " + "${clientId.id}:$secret".base64()
+        )
+
+        return authenticationService.getAccessToken(
+            body = mapOf(
+                "grant_type" to "client_credentials",
+            ),
+            headers = headers
+        )
+    }
+}
+
+private fun String.base64(): String {
+    return Base64.getEncoder().encodeToString(this.encodeToByteArray()).toString()
 }
