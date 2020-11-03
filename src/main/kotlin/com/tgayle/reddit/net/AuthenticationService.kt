@@ -2,15 +2,13 @@ package com.tgayle.reddit.net
 
 import com.tgayle.reddit.auth.AuthenticationParams
 import com.tgayle.reddit.auth.AuthenticationState
-import kotlinx.serialization.*
-import kotlinx.serialization.internal.NamedValueEncoder
-import kotlinx.serialization.modules.EmptySerializersModule
-import kotlinx.serialization.modules.SerializersModule
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.http.*
-import kotlin.reflect.typeOf
+import retrofit2.http.FieldMap
+import retrofit2.http.FormUrlEncoded
+import retrofit2.http.HeaderMap
+import retrofit2.http.POST
 
 interface AuthenticationService {
     companion object {

@@ -3,7 +3,7 @@ package com.tgayle.reddit.models.base
 import kotlinx.serialization.SerialName
 
 /**
- * A Reddit [Thing] that can be voted on.
+ * A Reddit [com.tgayle.reddit.models.Thing] that can be voted on.
  */
 interface Votable {
     @SerialName("ups")

@@ -34,9 +34,10 @@ dependencies {
 }
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions {
-    freeCompilerArgs = listOf("-Xinline-classes")
+    freeCompilerArgs = listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
 }
 
+// Parse local.properties file and make properties available at compile-time for application.
 buildConfig {
     val localProps = rootProject.file("local.properties")
         if (localProps.exists()) {

@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * A Reddit [Thing] that has a definite time of creation.
+ * A Reddit [com.tgayle.reddit.models.Thing] that has a definite time of creation.
  */
 interface Created {
     @Serializable(DoubleAsLongSerializer::class)
