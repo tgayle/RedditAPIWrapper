@@ -8,8 +8,13 @@ Features:
   - [x] Load posts from reddit's front page
   - [ ] Load posts from a subreddit
   - [ ] Grab comments for a given post
-- [ ] Sprint 2
   - [ ] User authentication
+    - [x] Script Authentication
+    - [x] Userless (Script) Authentication
+    - [ ] Userless (Installed) Authentication
+    - [ ] Installed App Authentication
+    - [ ] Web App Authentication
+- [ ] Sprint 2
   - [ ] View content specific for a user.
   - [ ] Create comments for posts
   - [ ] Upvote and downvote reddit posts.
