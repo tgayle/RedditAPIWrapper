@@ -1,5 +1,6 @@
 package examples.reddit
 
+import com.tgayle.DesignPatternsRedditAPI.BuildConfig
 import com.tgayle.reddit.RedditAPI
 import com.tgayle.reddit.RedditClient
 import com.tgayle.reddit.auth.Anonymous
@@ -39,10 +40,27 @@ fun main() {
     }
 }
 
-suspend fun scriptAuthTest(api: RedditAPI) {
-    val auth = Script("", "", "")
+suspend fun scriptAuthTest() {
+    val auth = Script(BuildConfig.SCRIPT_CLIENT_SECRET, BuildConfig.SCRIPT_USERNAME, BuildConfig.SCRIPT_PASSWORD)
+    val api = RedditAPI(RedditClient(
+        ClientId(BuildConfig.SCRIPT_CLIENT_ID),
+        auth
+    ))
+    
+    BuildConfig.SCRIPT_CLIENT_ID
 
-    api.authenticate(auth).also(::println)
+    api.authenticate().also(::println)
+}
+
+suspend fun userlessAuthTest() {
+    val auth = Anonymous(BuildConfig.SCRIPT_CLIENT_SECRET)
+    val client = RedditClient(
+        ClientId(BuildConfig.SCRIPT_CLIENT_ID),
+        auth
+    )
+
+    val reddit = RedditAPI(client)
+    reddit.posts.getFrontPage().forEach { println(it.title) }
 }
 
 suspend fun commentsExample(api: RedditAPI) {

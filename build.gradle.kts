@@ -1,8 +1,10 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import kotlin.Exception
 
 plugins {
     kotlin("jvm") version "1.4.10"
     kotlin("plugin.serialization") version "1.4.10"
+    id("com.github.gmazzo.buildconfig") version "2.0.2"
 }
 
 group = "com.tgayle"
@@ -33,4 +35,25 @@ dependencies {
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions {
     freeCompilerArgs = listOf("-Xinline-classes")
+}
+
+buildConfig {
+    val localProps = rootProject.file("local.properties")
+        if (localProps.exists()) {
+            localProps.readLines().forEach {
+                if (it.isEmpty()) return@forEach
+
+                val key = it.substringBefore('=')
+                val value = it.substringAfter('=')
+
+                val type = when {
+                    value.startsWith('"') -> "String"
+                    '.' in value -> "Float"
+                    value.first().isDigit() -> "Int"
+                    else -> throw Exception("Unknown type for local.property key $key")
+                }
+
+                buildConfigField(type, key, value.replace("$", "\\$"))
+            }
+        }
 }
