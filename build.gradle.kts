@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm") version "1.4.10"
     kotlin("plugin.serialization") version "1.4.10"
@@ -13,6 +15,9 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
 
+    // OkHttp/Retrofit Request Logger
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.0")
+
     // Retrofit HTTP Client
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
 
@@ -24,4 +29,8 @@ dependencies {
 
     // Kotlin Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0")
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    freeCompilerArgs = listOf("-Xinline-classes")
 }

@@ -15,14 +15,9 @@ interface RedditAPIService {
         const val BASE_REDDIT_URL = "https://reddit.com"
 
         fun defaultClient(): RedditAPIService {
-            val jsonConverter = Json {
-                ignoreUnknownKeys = true
-                encodeDefaults = true
-            }.asConverterFactory(MediaType.get("application/json"))
-
             return Retrofit.Builder()
                 .baseUrl(BASE_REDDIT_URL)
-                .addConverterFactory(jsonConverter)
+                .addConverterFactory(defaultJsonConverter())
                 .build()
                 .create(RedditAPIService::class.java)
         }
