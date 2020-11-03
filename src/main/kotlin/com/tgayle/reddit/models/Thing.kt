@@ -2,7 +2,7 @@ package com.tgayle.reddit.models
 
 import com.tgayle.reddit.models.base.Created
 import com.tgayle.reddit.models.base.Votable
-import com.tgayle.reddit.net.DoubleAsLongSerializer
+import com.tgayle.reddit.net.serialization.DoubleAsLongSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

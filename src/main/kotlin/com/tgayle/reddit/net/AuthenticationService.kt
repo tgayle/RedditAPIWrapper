@@ -32,21 +32,3 @@ interface AuthenticationService {
     @FormUrlEncoded
     suspend fun getAccessToken(@FieldMap body: Map<String, String>, @HeaderMap headers: Map<String, String> = emptyMap()): AuthenticationState
 }
-
-@OptIn(ExperimentalStdlibApi::class)
-inline fun <reified T> encodeToFieldMap(serializable: T): Map<String, String> {
-    val encoder = FieldMapEncoder()
-    serializer(typeOf<T>()).serialize(encoder, serializable)
-    return encoder.map
-
-}
-
-@OptIn(InternalSerializationApi::class)
-class FieldMapEncoder: NamedValueEncoder() {
-    override val serializersModule: SerializersModule = EmptySerializersModule
-    val map = mutableMapOf<String, String>()
-
-    override fun encodeTaggedValue(tag: String, value: Any) {
-        map[tag] = value.toString()
-    }
-}

@@ -1,6 +1,6 @@
 package com.tgayle.reddit.models.base
 
-import com.tgayle.reddit.net.DoubleAsLongSerializer
+import com.tgayle.reddit.net.serialization.DoubleAsLongSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

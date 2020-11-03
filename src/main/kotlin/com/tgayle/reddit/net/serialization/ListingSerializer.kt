@@ -1,4 +1,4 @@
-package com.tgayle.reddit.net
+package com.tgayle.reddit.net.serialization
 
 import com.tgayle.reddit.models.Listing
 import com.tgayle.reddit.models.Thing

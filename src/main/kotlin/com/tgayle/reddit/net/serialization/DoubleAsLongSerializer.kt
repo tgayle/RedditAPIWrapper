@@ -1,4 +1,4 @@
-package com.tgayle.reddit.net
+package com.tgayle.reddit.net.serialization
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
