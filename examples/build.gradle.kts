@@ -10,8 +10,10 @@ repositories {
 
 dependencies {
     implementation("no.tornado:tornadofx:1.7.20")
-    implementation("kotlinx-coroutines-javafx:1.4.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-javafx:1.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0")
+
+    implementation(rootProject)
 }
 
 javafx {
