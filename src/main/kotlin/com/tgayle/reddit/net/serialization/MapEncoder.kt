@@ -8,12 +8,16 @@ import kotlinx.serialization.serializer
 import kotlin.reflect.typeOf
 
 @OptIn(InternalSerializationApi::class)
-class FieldMapEncoder: NamedValueEncoder() {
+class MapEncoder: NamedValueEncoder() {
     override val serializersModule: SerializersModule = EmptySerializersModule
     val map = mutableMapOf<String, String>()
 
     override fun encodeTaggedValue(tag: String, value: Any) {
         map[tag] = value.toString()
+    }
+
+    /* no-op, null fields are not added to map. */
+    override fun encodeTaggedNull(tag: String) {
     }
 }
 
@@ -21,8 +25,8 @@ class FieldMapEncoder: NamedValueEncoder() {
  * Converts a Serializable to a Map<String, String> where each key is a property of the Serializable.
  */
 @OptIn(ExperimentalStdlibApi::class)
-inline fun <reified T> encodeToFieldMap(serializable: T): Map<String, String> {
-    val encoder = FieldMapEncoder()
+inline fun <reified T> encodeToMap(serializable: T): Map<String, String> {
+    val encoder = MapEncoder()
     serializer(typeOf<T>()).serialize(encoder, serializable)
     return encoder.map
 
