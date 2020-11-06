@@ -8,30 +8,9 @@ import com.tgayle.reddit.net.RedditAPIService
 import com.tgayle.reddit.net.serialization.encodeToMap
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.Serializable
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import java.lang.Integer.min
 
-data class ListingParameters(
-    val after: String? = null,
-    val before: String? = null,
-    val count: Int = 25,
-)
-
-class ListingLoader<T>(val route: String, val params: ListingParameters) {
-    init {
-        val query = with(params) {
-            "?count=$count${if (after != null)  "&after=$after&" else ""}${if (before != null) "&before=$before" else ""}&"
-        }
-
-        val request = Request.Builder().get().url(route + query)
-
-        val client = OkHttpClient()
-        val call = client.newCall(request.build())
-    }
-}
-
-fun <T: Thing> getListing(
+private fun <T: Thing> getListing(
     params: ListingRequestParams = ListingRequestParams(),
     fetchListingSegment: suspend (before: String?, after: String?, limit: Int) -> Listing<T>
 ): Flow<List<T>> = flow {
@@ -45,7 +24,7 @@ fun <T: Thing> getListing(
     var totalLoaded = 0
 
     while (true) {
-        val page = fetchListingSegment(before, after, params.count)// Listing<T>(Thing.Kind.Link.name, Listing.Data(dist = 25, children = emptyList(), before, after))// getPage()
+        val page = fetchListingSegment(before, after, params.limit)
 
         when {
             usingBefore -> before = page.data.before
@@ -67,11 +46,18 @@ fun <T: Thing> getListing(
 }
 
 data class ListingRequestParams(
-    val before: String? = null, val after: String? = null, val count: Int = 25, val total: Int = Int.MAX_VALUE
+    val before: String? = null,
+    val after: String? = null,
+    val limit: Int = 25,
+    val total: Int = Int.MAX_VALUE
 )
 
 @Serializable
-internal data class ListingQueryParameters(val before: String? = null, val after: String? = null, val count: Int = 25)
+internal data class ListingQueryParameters(
+    val before: String? = null,
+    val after: String? = null,
+    val limit: Int = 25
+)
 
 class PostManager(val client: RedditClient, private val service: RedditAPIService) {
 

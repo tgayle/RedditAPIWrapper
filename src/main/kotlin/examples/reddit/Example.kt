@@ -63,11 +63,11 @@ suspend fun userlessAuthTest() {
 
     val reddit = RedditAPI(client)
     var numLoaded = 0
-    reddit.posts.getFrontPageBuilder(ListingRequestParams(total = 503))
+    reddit.posts.getFrontPage(ListingRequestParams(after = "t3_jon9iz", total = 30, limit = 10))
         .onEach {
             numLoaded += it.size
 
-            println("Loaded page! before=${it.first().id} after=${it.last().id} size=${it.size}")
+            println("Loaded page! before=${it.first().name} after=${it.last().name} size=${it.size}")
         }
         .collect()
 
@@ -91,7 +91,7 @@ suspend fun commentsExample(api: RedditAPI) {
 }
 
 suspend fun frontPageExample(api: RedditAPI) {
-    val posts = api.posts.getFrontPageBuilder().first()
+    val posts = api.posts.getFrontPage().first()
 
     for (post in posts) {
         println("""
