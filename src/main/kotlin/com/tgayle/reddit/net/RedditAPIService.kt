@@ -6,6 +6,7 @@ import com.tgayle.reddit.models.Link
 import retrofit2.Retrofit
 import retrofit2.http.GET
 import retrofit2.http.Path
+import retrofit2.http.QueryMap
 
 interface RedditAPIService {
     companion object {
@@ -21,7 +22,7 @@ interface RedditAPIService {
     }
 
     @GET("/.json")
-    suspend fun getFrontPage(): Listing<Link>
+    suspend fun getFrontPage(@QueryMap query: Map<String, String>): Listing<Link>
 
     @GET("/r/{subreddit}/{link_id}/.json")
     suspend fun getComments(@Path("subreddit") subreddit: String, @Path("link_id") postId: String): List<Listing<Comment>>

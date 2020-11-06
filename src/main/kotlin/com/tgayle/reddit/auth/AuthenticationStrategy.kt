@@ -2,7 +2,7 @@ package com.tgayle.reddit.auth
 
 import com.tgayle.reddit.models.ClientId
 import com.tgayle.reddit.net.AuthenticationService
-import com.tgayle.reddit.net.serialization.encodeToFieldMap
+import com.tgayle.reddit.net.serialization.encodeToMap
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.*
@@ -44,7 +44,7 @@ class Script(secret: String, private val username: String, private val password:
 
     override suspend fun authenticate(clientId: ClientId): AuthenticationState {
         val headers = basicAuthHeaders(clientId)
-        return authenticationService.getAccessToken(encodeToFieldMap(ScriptAuthenticationParams(username, password)), headers)
+        return authenticationService.getAccessToken(encodeToMap(ScriptAuthenticationParams(username, password)), headers)
     }
 }
 

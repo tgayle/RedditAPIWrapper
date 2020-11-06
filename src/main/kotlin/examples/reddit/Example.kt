@@ -10,6 +10,8 @@ import com.tgayle.reddit.models.ClientId
 import com.tgayle.reddit.models.EditedState
 import com.tgayle.reddit.models.Link
 import com.tgayle.reddit.models.Listing
+import com.tgayle.reddit.posts.ListingRequestParams
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 
@@ -60,7 +62,16 @@ suspend fun userlessAuthTest() {
     )
 
     val reddit = RedditAPI(client)
-    reddit.posts.getFrontPage().forEach { println(it.title) }
+    var numLoaded = 0
+    reddit.posts.getFrontPageBuilder(ListingRequestParams(total = 503))
+        .onEach {
+            numLoaded += it.size
+
+            println("Loaded page! before=${it.first().id} after=${it.last().id} size=${it.size}")
+        }
+        .collect()
+
+    println("Closed after loading $numLoaded posts.")
 }
 
 suspend fun commentsExample(api: RedditAPI) {
@@ -80,7 +91,7 @@ suspend fun commentsExample(api: RedditAPI) {
 }
 
 suspend fun frontPageExample(api: RedditAPI) {
-    val posts = api.posts.getFrontPage()
+    val posts = api.posts.getFrontPageBuilder().first()
 
     for (post in posts) {
         println("""
