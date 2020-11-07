@@ -6,7 +6,7 @@ This library serves as a wrapper around [Reddit](https://reddit.com), a internet
 Features:
 - [ ] Sprint 1
   - [x] Load posts from reddit's front page
-  - [ ] Load posts from a subreddit
+  - [x] Load posts from a subreddit
   - [ ] Grab comments for a given post
   - [ ] User authentication
     - [x] Script Authentication
