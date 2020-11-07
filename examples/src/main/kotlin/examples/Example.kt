@@ -5,6 +5,7 @@ import androidx.compose.desktop.Window
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumnFor
+import androidx.compose.foundation.lazy.LazyColumnForIndexed
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,7 +19,10 @@ import com.tgayle.reddit.RedditClient
 import com.tgayle.reddit.auth.Anonymous
 import com.tgayle.reddit.models.ClientId
 import com.tgayle.reddit.models.Link
+import com.tgayle.reddit.posts.ListingRequestParams
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -41,9 +45,13 @@ fun main() = Window {
 
         val refreshPosts = {
             scope.launch {
+                if (loading) {
+                    println("Didn't try to load page since we're already loading.")
+                    return@launch
+                }
                 loading = true
                 posts = withContext(Dispatchers.IO) {
-                    api.posts.getFrontPage().toList()
+                    api.posts.getFrontPage().first()
                 }
                 loading = false
             }
@@ -61,12 +69,28 @@ fun main() = Window {
                             items = posts,
                             onPostClick = {
                                 currentPost = it
+                            },
+                            onEndOfPageReached = { lastItem ->
+                                scope.launch {
+                                    if (loading) {
+                                        return@launch
+                                    }
+
+                                    println("Loading next page with after = ${lastItem.name}")
+                                    loading = true
+
+                                    posts = posts + withContext(Dispatchers.IO) {
+                                        api.posts.getFrontPage(ListingRequestParams(after = lastItem.name)).firstOrNull() ?: listOf()
+                                    }
+
+                                    loading = false
+                                }
                             }
                         )
                     }
 
 
-                    DetailView(Modifier.fillMaxWidth(0.7f).fillMaxHeight(),
+                    DetailView(Modifier.fillMaxWidth(animate(if (currentPost != null) 0.7f else 0.3f)).fillMaxHeight(),
                         post = currentPost,
                         onLoadPressed = {
                             refreshPosts()
@@ -95,20 +119,27 @@ fun MyTopAppBar(onRefreshClick: () -> Unit) {
 }
 
 @Composable
-fun PostList(modifier: Modifier = Modifier, loading: Boolean, items: List<Link>, onPostClick: (Link) -> Unit = {}) {
+fun PostList(modifier: Modifier = Modifier, loading: Boolean, items: List<Link>, onPostClick: (Link) -> Unit = {}, onEndOfPageReached: (lastItem: Link) -> Unit) {
     Stack(modifier) {
         Column(
             modifier = Modifier
                 .matchParentSize()
                 .align(Alignment.TopCenter)
         ) {
-            LazyColumnFor(items) { link ->
+            LazyColumnForIndexed(items) { index, link ->
                 ListItem(
                     secondaryText = { Text("/u/${link.author} - ${link.upvotes} votes") },
                     modifier = Modifier.clickable { onPostClick(link) }) {
                     Text(link.title, maxLines = 1)
                 }
                 Divider()
+
+                if (index == items.size - 1) {
+                    ListItem { Button(onClick = {onEndOfPageReached(link)}) {
+                        Text("Load next page.")
+                    } }
+                }
+
             }
         }
 

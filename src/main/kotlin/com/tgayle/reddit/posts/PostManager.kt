@@ -36,7 +36,7 @@ private fun <T: Thing> getListing(
         val subListEndingIndex = min((params.total - totalLoaded), page.data.children.size)
         val takenSection = page.data.children.subList(0, subListEndingIndex)
         totalLoaded += takenSection.size
-        println("$totalLoaded $totalLoaded $subListEndingIndex")
+
         emit(takenSection.map { it.data })
 
         if (totalLoaded == params.total) {
