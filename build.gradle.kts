@@ -35,6 +35,7 @@ dependencies {
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions {
     freeCompilerArgs = listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
+    jvmTarget = "1.8"
 }
 
 // Parse local.properties file and make properties available at compile-time for application.
