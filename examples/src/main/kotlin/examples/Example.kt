@@ -20,85 +20,122 @@ import com.tgayle.reddit.auth.Anonymous
 import com.tgayle.reddit.models.ClientId
 import com.tgayle.reddit.models.Link
 import com.tgayle.reddit.posts.ListingRequestParams
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-val api = RedditAPI(
-    RedditClient(
-        ClientId(BuildConfig.SCRIPT_CLIENT_ID),
-        Anonymous(
-            BuildConfig.SCRIPT_CLIENT_SECRET,
+
+private class Controller(val scope: CoroutineScope) {
+    var loading by mutableStateOf(false)
+        private set
+    var posts by mutableStateOf(listOf<Link>())
+        private set
+    var currentPost by mutableStateOf<Link?>(null)
+
+    var currentSubreddit: String? by mutableStateOf(null)
+
+    val api = RedditAPI(
+        RedditClient(
+            ClientId(BuildConfig.SCRIPT_CLIENT_ID),
+            Anonymous(
+                BuildConfig.SCRIPT_CLIENT_SECRET,
+            )
         )
     )
-)
+
+    private suspend fun linkLoader(params: ListingRequestParams = ListingRequestParams()): Flow<List<Link>> {
+        return currentSubreddit.let {
+            if (it == null) {
+                api.posts.getFrontPage()
+            } else {
+                api.posts.getSubreddit(it, params)
+            }
+        }
+    }
+
+    fun refreshPosts() {
+        scope.launch {
+            if (loading) {
+                println("Didn't try to load page since we're already loading.")
+                return@launch
+            }
+            loading = true
+            posts = withContext(Dispatchers.IO) {
+                linkLoader()
+                    .catch {
+                        println(it)
+                        loading = false
+                    }
+                    .firstOrNull() ?: listOf()
+            }
+            loading = false
+        }
+    }
+
+    fun loadNextPage(lastItem: Link) {
+        scope.launch {
+            if (loading) {
+                return@launch
+            }
+
+            println("Loading next page with after = ${lastItem.name}")
+            loading = true
+
+            posts = posts + withContext(Dispatchers.IO) {
+                linkLoader(ListingRequestParams(after = lastItem.name)).firstOrNull() ?: listOf()
+            }
+
+            loading = false
+        }
+    }
+
+    fun loadSubreddit(subreddit: String) {
+        currentSubreddit = (if (subreddit.isBlank()) null else subreddit.replace(" ", ""))
+        refreshPosts()
+    }
+}
 
 fun main() = Window {
     MaterialTheme {
         val scope = rememberCoroutineScope()
-
-        var loading by remember { mutableStateOf(false) }
-        var posts by remember { mutableStateOf(listOf<Link>()) }
-        var currentPost by remember { mutableStateOf<Link?>(null) }
-
-        val refreshPosts = {
-            scope.launch {
-                if (loading) {
-                    println("Didn't try to load page since we're already loading.")
-                    return@launch
-                }
-                loading = true
-                posts = withContext(Dispatchers.IO) {
-                    api.posts.getFrontPage().first()
-                }
-                loading = false
-            }
-        }
+        val controller = remember { Controller(scope) }
 
         onActive {
-            refreshPosts()
+            controller.refreshPosts()
         }
 
         Scaffold(topBar = {
-            MyTopAppBar(onRefreshClick = { refreshPosts() })
+            MyTopAppBar(
+                onRefreshClick = { controller.refreshPosts() },
+                currentSubreddit = controller.currentSubreddit
+            )
         }) {
             Column {
                 Row(Modifier.fillMaxSize()) {
                     Box(Modifier.fillMaxWidth(0.3f).border(1.dp, Color.Black).fillMaxHeight()) {
                         PostList(
                             Modifier.fillMaxSize(),
-                            loading = loading,
-                            items = posts,
+                            loading = controller.loading,
+                            items = controller.posts,
+                            currentSubreddit = controller.currentSubreddit,
                             onPostClick = {
-                                currentPost = it
+                                controller.currentPost = it
                             },
-                            onEndOfPageReached = { lastItem ->
-                                scope.launch {
-                                    if (loading) {
-                                        return@launch
-                                    }
-
-                                    println("Loading next page with after = ${lastItem.name}")
-                                    loading = true
-
-                                    posts = posts + withContext(Dispatchers.IO) {
-                                        api.posts.getFrontPage(ListingRequestParams(after = lastItem.name)).firstOrNull() ?: listOf()
-                                    }
-
-                                    loading = false
-                                }
-                            }
+                            onEndOfPageReached = { lastItem -> controller.loadNextPage(lastItem) },
+                            onSubredditChanged = { controller.loadSubreddit(it) }
                         )
                     }
 
 
-                    DetailView(Modifier.fillMaxWidth(animate(if (currentPost != null) 0.7f else 0.3f)).fillMaxHeight(),
-                        post = currentPost,
-                        onLoadPressed = {
-                            refreshPosts()
-                        })
+                    DetailView(Modifier.fillMaxWidth(animate(if (controller.currentPost != null) 0.7f else 0.3f))
+                        .fillMaxHeight(),
+                        post = controller.currentPost,
+                        onLoadPressed = { controller.refreshPosts() }
+                    )
                 }
             }
         }
@@ -107,9 +144,12 @@ fun main() = Window {
 }
 
 @Composable
-fun MyTopAppBar(onRefreshClick: () -> Unit) {
+private fun MyTopAppBar(
+    onRefreshClick: () -> Unit,
+    currentSubreddit: String?
+) {
     TopAppBar(
-        title = { Text("Reddit API Example Application (Design Patterns)") },
+        title = { Text(if (currentSubreddit == null) "Front Page" else "/r/$currentSubreddit") },
         actions = {
             IconButton(onClick = onRefreshClick) {
                 Image(
@@ -123,28 +163,32 @@ fun MyTopAppBar(onRefreshClick: () -> Unit) {
 }
 
 @Composable
-fun PostList(modifier: Modifier = Modifier, loading: Boolean, items: List<Link>, onPostClick: (Link) -> Unit = {}, onEndOfPageReached: (lastItem: Link) -> Unit) {
+private fun PostList(
+    modifier: Modifier = Modifier,
+    loading: Boolean,
+    items: List<Link>,
+    currentSubreddit: String? = null,
+    onSubredditChanged: (String) -> Unit = {},
+    onPostClick: (Link) -> Unit = {},
+    onEndOfPageReached: (lastItem: Link) -> Unit = {}
+) {
+
     Stack(modifier) {
         Column(
             modifier = Modifier
                 .matchParentSize()
                 .align(Alignment.TopCenter)
         ) {
-            LazyColumnForIndexed(items) { index, link ->
-                ListItem(
-                    secondaryText = { Text("/u/${link.author} - ${link.upvotes} votes") },
-                    modifier = Modifier.clickable { onPostClick(link) }) {
-                    Text(link.title, maxLines = 1)
-                }
-                Divider()
 
-                if (index == items.size - 1) {
-                    ListItem { Button(onClick = {onEndOfPageReached(link)}) {
-                        Text("Load next page.")
-                    } }
-                }
-
+            Card(modifier = Modifier.padding(8.dp), elevation = 8.dp) {
+                PostListSearchBar(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    onSubredditChanged,
+                    currentSubreddit
+                )
             }
+
+            PostListItems(items, onPostClick, onEndOfPageReached)
         }
 
         Surface(
@@ -166,7 +210,62 @@ fun PostList(modifier: Modifier = Modifier, loading: Boolean, items: List<Link>,
 }
 
 @Composable
-fun DetailView(modifier: Modifier = Modifier, post: Link? = null, onLoadPressed: () -> Unit) {
+private fun PostListSearchBar(
+    modifier: Modifier = Modifier,
+    onSubredditChanged: (String) -> Unit,
+    currentSubreddit: String?
+) {
+    var subredditText by remember { mutableStateOf(currentSubreddit ?: "") }
+
+    ListItem() {
+        OutlinedTextField(
+            modifier = modifier,
+            value = subredditText,
+            onValueChange = {
+                if ("\n" in it) {
+                    onSubredditChanged(subredditText)
+                } else {
+                    subredditText = it
+                }
+            },
+            placeholder = { Text(if (currentSubreddit.isNullOrBlank()) "Front Page" else "/r/$currentSubreddit") }
+        )
+    }
+}
+
+@Composable
+private fun PostListItems(
+    items: List<Link>,
+    onPostClick: (Link) -> Unit,
+    onEndOfPageReached: (lastItem: Link) -> Unit
+) {
+    LazyColumnForIndexed(items) { index, link ->
+        ListItem(
+            secondaryText = { Text("/u/${link.author} - ${link.upvotes} votes") },
+            modifier = Modifier.clickable { onPostClick(link) }) {
+            Text(link.title, maxLines = 1)
+        }
+        Divider()
+
+        if (index == items.size - 1) {
+            ListItem() {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(
+                        onClick = { onEndOfPageReached(link) }) {
+                        Text("Load next page.")
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+@Composable
+private fun DetailView(modifier: Modifier = Modifier, post: Link? = null, onLoadPressed: () -> Unit) {
     Column(modifier) {
         Button(onLoadPressed) {
             Text("Load Posts")
