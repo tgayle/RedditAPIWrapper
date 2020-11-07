@@ -59,10 +59,16 @@ internal data class ListingQueryParameters(
     val limit: Int = 25
 )
 
-class PostManager(val client: RedditClient, private val service: RedditAPIService) {
+class PostManager(private val client: RedditClient, private val service: RedditAPIService) {
 
     suspend fun getFrontPage(params: ListingRequestParams = ListingRequestParams()) = client.ensureAuth {
         getListing(params) { before, after, limit -> service.getFrontPage(encodeToMap(ListingQueryParameters(before, after, limit))) }
+    }
+
+    suspend fun getSubreddit(subreddit: String, params: ListingRequestParams = ListingRequestParams()) = client.ensureAuth {
+        getListing(params) { before, after, limit ->
+            service.getSubreddit(subreddit, encodeToMap(ListingQueryParameters(before, after, limit)))
+        }
     }
 
     suspend fun getComments(subreddit: String, linkId: String) = client.ensureAuth {

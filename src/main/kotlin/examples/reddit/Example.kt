@@ -63,15 +63,23 @@ suspend fun userlessAuthTest() {
 
     val reddit = RedditAPI(client)
     var numLoaded = 0
-    reddit.posts.getFrontPage(ListingRequestParams(after = "t3_jon9iz", total = 30, limit = 10))
-        .onEach {
-            numLoaded += it.size
+//    reddit.posts.getFrontPage(ListingRequestParams(after = "t3_jon9iz", total = 30, limit = 10))
+//        .onEach {
+//            numLoaded += it.size
+//
+//            println("Loaded page! before=${it.first().name} after=${it.last().name} size=${it.size}")
+//        }
+//        .collect()
 
-            println("Loaded page! before=${it.first().name} after=${it.last().name} size=${it.size}")
+    reddit.posts.getSubreddit("programming")
+        .flatMapConcat { it.asFlow() }
+        .take(30)
+        .onEach {
+            println(it.title)
         }
         .collect()
 
-    println("Closed after loading $numLoaded posts.")
+//    println("Closed after loading $numLoaded posts.")
 }
 
 suspend fun commentsExample(api: RedditAPI) {
