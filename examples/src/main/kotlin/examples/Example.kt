@@ -57,6 +57,10 @@ fun main() = Window {
             }
         }
 
+        onActive {
+            refreshPosts()
+        }
+
         Scaffold(topBar = {
             MyTopAppBar(onRefreshClick = { refreshPosts() })
         }) {
