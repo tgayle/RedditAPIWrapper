@@ -25,7 +25,7 @@ class RedditClient(
         return block()
     }
 
-    suspend fun getToken() {
+    suspend fun getToken(): AuthenticationState {
         refreshingToken.withLock(_token) {
             val tokenState = _token.value
             if (tokenState == null || tokenState.expired) {
@@ -36,6 +36,8 @@ class RedditClient(
                 println("No need to refresh the token yet.")
             }
         }
+
+        return token.value!!
     }
 
     suspend fun authenticate() {
@@ -46,7 +48,9 @@ class RedditClient(
 
 class RedditAPI(
         val client: RedditClient,
-        private val service: RedditAPIService = RedditAPIService.defaultClient(),
+        private val service: RedditAPIService = RedditAPIService.defaultClient {
+           client.getToken().accessToken
+        },
 ) {
     val posts: PostManager = PostManager(client, service)
 
