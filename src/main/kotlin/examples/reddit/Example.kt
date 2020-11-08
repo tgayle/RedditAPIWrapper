@@ -6,6 +6,7 @@ import com.tgayle.reddit.RedditClient
 import com.tgayle.reddit.auth.Anonymous
 import com.tgayle.reddit.auth.Script
 import com.tgayle.reddit.models.ClientId
+import com.tgayle.reddit.models.Reply
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 
@@ -69,17 +70,17 @@ suspend fun commentsExample(api: RedditAPI) {
     val post = api.posts.getLink("askreddit", "jpfqtc")
 
     println("""
-        ${post.link.title}
-        /r/${post.link.subreddit}
+    ${post.link.title}
+    /r/${post.link.subreddit}
         
-        Comments:
-        \t${post.comments.take(10).joinToString("\n\t") {
-            "${it.body}\n\t/u/${it.author} - ${it.upvotes} upvotes"
-    }}
-    """.trimIndent())
-    post.comments.forEach {
-        println("${it.author} ${it.parentId} ${it.body}")
+    Comments:
+    ${"\t"}${post.comments.joinToString("\n\n\t") {
+    when (it) {
+        is Reply.Comment -> "${it.body}\n\t\t/u/${it.author} - ${it.upvotes} upvotes"
+        is Reply.MoreComments -> "${it.count} more comments, ${it.depth} deep"
     }
+    }}
+    """)
 }
 
 suspend fun frontPageExample(reddit: RedditAPI) {

@@ -59,19 +59,6 @@ sealed class Thing {
 // TODO: Resolve correct sealed class when given a [Listing]
 
 @Serializable
-@SerialName("more")
-data class MoreComments(
-    val count: Int,
-    @SerialName("parent_id")
-    val parentId: String,
-    val depth: Int,
-    val children: List<String>,
-    override val id: String
-): Thing() {
-    override fun kind(): Kind = Kind.More
-}
-
-@Serializable
 @SerialName("t3")
 data class Link(
     override val id: String,
@@ -100,8 +87,10 @@ data class Link(
 }
 
 @Serializable
-@SerialName("t1")
-data class Comment(
+sealed class Reply: Thing() {
+    @Serializable
+    @SerialName("t1")
+    data class Comment(
         override val id: String,
         @SerialName("approved_by")
         val approvedBy: String? = null,
@@ -154,9 +143,25 @@ data class Comment(
         @SerialName("subreddit_id")
         val subredditId: String,
         val distinguished: String? = null
-): Thing(), Votable, Created {
-    override fun kind(): Kind = Kind.Comment
+    ): Reply(), Votable, Created {
+        override fun kind(): Kind = Kind.Comment
+    }
+
+
+    @Serializable
+    @SerialName("more")
+    data class MoreComments(
+        val count: Int,
+        @SerialName("parent_id")
+        val parentId: String,
+        val depth: Int,
+        val children: List<String>,
+        override val id: String
+    ): Reply() {
+        override fun kind(): Kind = Kind.More
+    }
 }
+
 
 
 
@@ -189,7 +194,7 @@ object CommentReplySerializer: KSerializer<Listing<Thing>?> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("CommentReplies")
 
     override fun serialize(encoder: Encoder, value: Listing<Thing>?) {
-        TODO("Not yet implemented")
+        TODO("This should not be serialized.")
     }
 
 }
