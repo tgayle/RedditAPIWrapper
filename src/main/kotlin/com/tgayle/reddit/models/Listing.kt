@@ -3,7 +3,6 @@ package com.tgayle.reddit.models
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.*
-import kotlinx.serialization.serializer
 
 /**
  * A Reddit structure used for paginating content. The [Data.before] and [Data.after]
@@ -20,49 +19,37 @@ data class Listing<T: Thing>(
     }
 
     @Serializable
-    data class Data<T: Thing> constructor(
+    data class Data<T: Thing> internal constructor(
         val dist: Int?,
-        @Serializable(ChildListSerializer::class)
+        @Serializable(ListingChildListSerializer::class)
         val children: List<Child<T>>,
         val before: String?,
         val after: String?
     )
 
     @Serializable
-    data class Child<T: Thing>(val data: T)
+    data class Child<T: Thing> internal constructor(val data: T)
 }
 
-object ChildListSerializer: JsonTransformingSerializer<List<Listing.Child<Thing>>>(ListSerializer(Listing.Child.serializer(Thing.serializer()))) {
+object ListingChildListSerializer: JsonTransformingSerializer<List<Listing.Child<Thing>>>(ListSerializer(Listing.Child.serializer(Thing.serializer()))) {
     override fun transformDeserialize(element: JsonElement): JsonElement {
-//        return buildJsonObject {
-//            putJsonObject("data") {
-//                element.jsonObject["data"]!!.jsonObject.forEach { key, value ->
-//                    put(key, value)
-//                }
-//
-//                put("kind", element.jsonObject["kind"]!!)
-//            }
-//        }
         if (element !is JsonArray) return element
 
-        val array = buildJsonArray {
+        return buildJsonArray {
             // Each child should look like { kind: str, data: obj }
-            element.jsonArray.map { child ->
+            element.jsonArray.forEach { child ->
+                val dataWithKind = buildJsonObject {
+                    putJsonObject("data") {
+                        child.jsonObject["data"]!!.jsonObject.forEach { key, value ->
+                            put(key, value)
+                        }
 
-                val data = buildJsonObject {
-                    child.jsonObject["data"]!!.jsonObject.forEach { key, value ->
-                        put(key, value)
+                        put("kind", child.jsonObject["kind"]!!)
                     }
-
-                    put("kind", child.jsonObject["kind"]!!)
                 }
 
-                val parent = buildJsonObject { put("data", data) }
-                parent
-//                add(buildJsonArray { add(parent) })
-            }.forEach(this::add)
+                add(dataWithKind)
+            }
         }
-
-        return array
     }
 }

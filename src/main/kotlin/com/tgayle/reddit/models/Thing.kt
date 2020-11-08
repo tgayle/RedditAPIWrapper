@@ -2,15 +2,10 @@ package com.tgayle.reddit.models
 
 import com.tgayle.reddit.models.base.Created
 import com.tgayle.reddit.models.base.Votable
+import com.tgayle.reddit.net.serialization.CommentReplySerializer
 import com.tgayle.reddit.net.serialization.DoubleAsLongSerializer
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.*
-import kotlinx.serialization.serializer
 
 /**
  * A [Thing] is the base of all Reddit entities.
@@ -162,84 +157,3 @@ sealed class Reply: Thing() {
     }
 }
 
-
-
-
-//object CommentReplySerializer: JsonTransformingSerializer<Listing<Thing>>(Listing.serializer(Thing.serializer())) {
-//    override fun transformDeserialize(element: JsonElement): JsonElement {
-//        return if (element is JsonPrimitive) {
-//            JsonNull
-//        } else {
-//            element
-//        }
-//    }
-//}
-
-object CommentReplySerializer: KSerializer<Listing<Thing>?> {
-    override fun deserialize(decoder: Decoder): Listing<Thing>? {
-        try {
-            decoder.decodeString()
-            return null
-        } catch (e: Exception) {
-            try {
-                decoder.decodeNull()
-                return null
-
-            } catch (e: Exception) {
-                return decoder.decodeNullableSerializableValue(serializer())
-            }
-        }
-    }
-
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("CommentReplies")
-
-    override fun serialize(encoder: Encoder, value: Listing<Thing>?) {
-        TODO("This should not be serialized.")
-    }
-
-}
-
-@Serializable(EditedState.EditedStateSerializer::class)
-sealed class EditedState {
-    @Serializable(EditedState.EditedStateSerializer::class)
-    object Unedited: EditedState()
-
-    @Serializable(EditedState.EditedStateSerializer::class)
-    sealed class Edited: EditedState() {
-
-        @Serializable(EditedState.EditedStateSerializer::class)
-        object EditedWithUnknownTime: Edited()
-
-        @Serializable(EditedState.EditedStateSerializer::class)
-        data class EditedWithTime(val editedTimeUtc: Long): Edited()
-    }
-
-    object EditedStateSerializer: KSerializer<EditedState> {
-        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("EditedState", PrimitiveKind.LONG)
-
-        override fun deserialize(decoder: Decoder): EditedState {
-            try {
-                return if (decoder.decodeBoolean()) {
-                    Edited.EditedWithUnknownTime
-                } else {
-                    Unedited
-                }
-            } catch (e: Exception) {
-                return try {
-                    Edited.EditedWithTime(decoder.decodeDouble().toLong())
-                } catch (e: Exception) {
-                    Edited.EditedWithUnknownTime
-                }
-            }
-
-        }
-
-        override fun serialize(encoder: Encoder, value: EditedState) {
-            when (value) {
-                Unedited -> encoder.encodeNull()
-                Edited.EditedWithUnknownTime -> encoder.encodeLong(-1)
-                is Edited.EditedWithTime -> encoder.encodeLong(value.editedTimeUtc)
-            }
-        }
-    }
-}
