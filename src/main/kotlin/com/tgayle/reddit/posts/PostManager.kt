@@ -1,9 +1,7 @@
 package com.tgayle.reddit.posts
 
 import com.tgayle.reddit.RedditClient
-import com.tgayle.reddit.models.Link
-import com.tgayle.reddit.models.Listing
-import com.tgayle.reddit.models.Thing
+import com.tgayle.reddit.models.*
 import com.tgayle.reddit.net.RedditAPIService
 import com.tgayle.reddit.net.serialization.encodeToMap
 import kotlinx.coroutines.flow.*
@@ -71,11 +69,11 @@ class PostManager(private val client: RedditClient, private val service: RedditA
         }
     }
 
-    suspend fun getComments(subreddit: String, linkId: String) = client.ensureAuth {
-        service.getComments(subreddit, linkId)
+    suspend fun getLink(subreddit: String, linkId: String) = client.ensureAuth {
+        service.getLink(subreddit, linkId).let { LinkWithComments(it.first().data.children.first().data as Link, it[1] as Listing<Comment>) }
     }
 
     suspend fun Link.comments() = client.ensureAuth {
-        service.getComments(subreddit, id)
+        service.getLink(subreddit, id)
     }
 }

@@ -6,11 +6,11 @@ import com.tgayle.reddit.net.serialization.DoubleAsLongSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.*
+import kotlinx.serialization.serializer
 
 /**
  * A [Thing] is the base of all Reddit entities.
@@ -24,12 +24,14 @@ sealed class Thing {
      *
      * @see Kind
      */
-    abstract val kind: Kind
+//    abstract val kind: Kind
+
+    abstract fun kind(): Kind
 
     /**
      * A [Thing]'s full name, comprised of its [Kind] and its id.
      */
-    val name get() = "${kind.prefix}_$id"
+    val name get() = "${kind().prefix}_$id"
 
     /**
      * An identifier representing a [Thing]'s type. Each [Kind] has a string
@@ -41,7 +43,8 @@ sealed class Thing {
         Link("t3"),
         Message("t4"),
         Subreddit("t5"),
-        Award("t6");
+        Award("t6"),
+        More("");
 
         companion object {
             fun fromPrefix(prefix: String): Kind {
@@ -56,6 +59,20 @@ sealed class Thing {
 // TODO: Resolve correct sealed class when given a [Listing]
 
 @Serializable
+@SerialName("more")
+data class MoreComments(
+    val count: Int,
+    @SerialName("parent_id")
+    val parentId: String,
+    val depth: Int,
+    val children: List<String>,
+    override val id: String
+): Thing() {
+    override fun kind(): Kind = Kind.More
+}
+
+@Serializable
+@SerialName("t3")
 data class Link(
     override val id: String,
     val subreddit: String,
@@ -79,10 +96,11 @@ data class Link(
     val author: String,
     val title: String
 ): Thing(), Votable, Created {
-    override val kind: Kind = Kind.Link
+    override fun kind(): Kind = Kind.Link
 }
 
 @Serializable
+@SerialName("t1")
 data class Comment(
         override val id: String,
         @SerialName("approved_by")
@@ -121,12 +139,13 @@ data class Comment(
         @SerialName("link_title")
         val linkTitle: String? = null,
         @SerialName("link_url")
-        val linkUrl: String?,
+        val linkUrl: String? = null,
         @SerialName("num_reports")
         val numReports: Int? = null,
         @SerialName("parent_id")
-        val parentId: String,
-        val replies: List<Thing>,
+        val parentId: String? = null,
+        @Serializable(CommentReplySerializer::class)
+        val replies: Listing<Thing>?,
         val saved: Boolean,
         val score: Int,
         @SerialName("score_hidden")
@@ -135,10 +154,44 @@ data class Comment(
         @SerialName("subreddit_id")
         val subredditId: String,
         val distinguished: String? = null
-
-
 ): Thing(), Votable, Created {
-    override val kind: Kind = Kind.Comment
+    override fun kind(): Kind = Kind.Comment
+}
+
+
+
+//object CommentReplySerializer: JsonTransformingSerializer<Listing<Thing>>(Listing.serializer(Thing.serializer())) {
+//    override fun transformDeserialize(element: JsonElement): JsonElement {
+//        return if (element is JsonPrimitive) {
+//            JsonNull
+//        } else {
+//            element
+//        }
+//    }
+//}
+
+object CommentReplySerializer: KSerializer<Listing<Thing>?> {
+    override fun deserialize(decoder: Decoder): Listing<Thing>? {
+        try {
+            decoder.decodeString()
+            return null
+        } catch (e: Exception) {
+            try {
+                decoder.decodeNull()
+                return null
+
+            } catch (e: Exception) {
+                return decoder.decodeNullableSerializableValue(serializer())
+            }
+        }
+    }
+
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("CommentReplies")
+
+    override fun serialize(encoder: Encoder, value: Listing<Thing>?) {
+        TODO("Not yet implemented")
+    }
+
 }
 
 @Serializable(EditedState.EditedStateSerializer::class)

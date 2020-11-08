@@ -1,8 +1,6 @@
 package com.tgayle.reddit.net
 
-import com.tgayle.reddit.models.Comment
-import com.tgayle.reddit.models.Listing
-import com.tgayle.reddit.models.Link
+import com.tgayle.reddit.models.*
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -17,7 +15,9 @@ interface RedditAPIService {
         fun defaultClient(getAuthToken: (suspend () -> String?)?): RedditAPIService {
             return Retrofit.Builder()
                 .baseUrl(BASE_REDDIT_URL)
-                .addConverterFactory(defaultJsonConverter())
+                .addConverterFactory(defaultJsonConverter {
+                    classDiscriminator = "kind"
+                })
                 .client(OkHttpClient.Builder()
                     .addInterceptor { chain ->
                         val request = chain.request().newBuilder()
@@ -37,8 +37,8 @@ interface RedditAPIService {
     @GET("/.json")
     suspend fun getFrontPage(@QueryMap query: Map<String, String>): Listing<Link>
 
-    @GET("/r/{subreddit}/{link_id}/.json")
-    suspend fun getComments(@Path("subreddit") subreddit: String, @Path("link_id") postId: String): List<Listing<Comment>>
+    @GET("/r/{subreddit}/comments/{link_id}")
+    suspend fun getLink(@Path("subreddit") subreddit: String, @Path("link_id") postId: String): List<Listing<Thing>>
 
 
     @GET("/r/{subreddit}")
