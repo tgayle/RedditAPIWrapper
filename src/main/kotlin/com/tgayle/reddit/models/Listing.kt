@@ -1,5 +1,7 @@
 package com.tgayle.reddit.models
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.*
@@ -37,6 +39,7 @@ object ListingChildListSerializer: JsonTransformingSerializer<List<Listing.Child
 
         return buildJsonArray {
             // Each child should look like { kind: str, data: obj }
+            // TODO: It would be better if we could somehow specify where the type discriminator is on the JSON rather than merging the kind into the object itself?
             element.jsonArray.forEach { child ->
                 val dataWithKind = buildJsonObject {
                     putJsonObject("data") {
@@ -50,6 +53,55 @@ object ListingChildListSerializer: JsonTransformingSerializer<List<Listing.Child
 
                 add(dataWithKind)
             }
+        }
+    }
+}
+
+data class ListingBuilderParams(
+    val before: String? = null,
+    val after: String? = null,
+    val limit: Int = 25,
+    val total: Int = Int.MAX_VALUE
+)
+
+@Serializable
+internal data class ListingQueryParameters(
+    val before: String? = null,
+    val after: String? = null,
+    val limit: Int = 25
+)
+
+internal fun <T: Thing> buildListing(
+    params: ListingBuilderParams = ListingBuilderParams(),
+    fetchListingSegment: suspend (before: String?, after: String?, limit: Int) -> Listing<T>
+): Flow<List<T>> = flow {
+    require(!(params.before != null && params.after != null)) { "Before and after parameters cannot be both provided at once." }
+
+    val usingBefore = params.before != null
+    val usingAfter = params.after != null || !usingBefore
+    var before = params.before
+    var after = params.after
+
+    var totalLoaded = 0
+
+    while (true) {
+        val page = fetchListingSegment(before, after, params.limit)
+
+        when {
+            usingBefore -> before = page.data.before
+            usingAfter -> after = page.data.after
+        }
+
+        if (page.data.dist == 0) return@flow
+
+        val subListEndingIndex = Integer.min((params.total - totalLoaded), page.data.children.size)
+        val takenSection = page.data.children.subList(0, subListEndingIndex)
+        totalLoaded += takenSection.size
+
+        emit(takenSection.map { it.data })
+
+        if (totalLoaded == params.total) {
+            return@flow
         }
     }
 }
