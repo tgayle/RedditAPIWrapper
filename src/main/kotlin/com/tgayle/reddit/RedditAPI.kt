@@ -60,4 +60,7 @@ class RedditAPI(
     val posts: PostManager = PostManager(client, service)
 
     suspend fun authenticate() = client.authenticate()
+    suspend fun getCurrentUser() = client.ensureAuth {
+        service.getCurrentUser()
+    }
 }

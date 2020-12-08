@@ -11,7 +11,7 @@ interface AuthenticationService {
     companion object {
         fun defaultClient(): AuthenticationService {
             return Retrofit.Builder()
-                    .addConverterFactory(defaultJsonConverter())
+                    .addConverterFactory(defaultJsonConverter().asJsonConverterFactory())
                     .client(OkHttpClient.Builder()
                         .addNetworkInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
                         .build())

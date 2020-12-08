@@ -2,11 +2,10 @@ package com.tgayle.reddit.net
 
 import com.tgayle.reddit.models.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.JsonObject
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
-import retrofit2.http.GET
-import retrofit2.http.Path
-import retrofit2.http.QueryMap
+import retrofit2.http.*
 
 interface RedditAPIService {
     companion object {
@@ -15,9 +14,7 @@ interface RedditAPIService {
         fun defaultClient(getAuthToken: (suspend () -> String?)?): RedditAPIService {
             return Retrofit.Builder()
                 .baseUrl(BASE_REDDIT_URL)
-                .addConverterFactory(defaultJsonConverter {
-                    classDiscriminator = "kind"
-                })
+                .addConverterFactory(defaultJsonConverter().asJsonConverterFactory())
                 .client(OkHttpClient.Builder()
                     .addInterceptor { chain ->
                         val request = chain.request().newBuilder()
@@ -44,5 +41,14 @@ interface RedditAPIService {
     @GET("/r/{subreddit}")
     suspend fun getSubreddit(@Path("subreddit") subreddit: String, @QueryMap query: Map<String, String>): Listing<Link>
 
+    @POST("/api/comment")
+    @FormUrlEncoded
+    suspend fun comment(@FieldMap body: Map<String, String>): JsonObject
+
+    @GET("/api/v1/me")
+    suspend fun getCurrentUser(): Account
+
+    @POST("/api/vote")
+    suspend fun vote(@FieldMap body: Map<String, String>)
 
 }

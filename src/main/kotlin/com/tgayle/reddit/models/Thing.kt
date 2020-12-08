@@ -76,7 +76,39 @@ data class Link(
     @SerialName("created_utc")
     override val createdUtc: Long,
     val author: String,
-    val title: String
+    val title: String,
+    @SerialName("saved")
+    val saved: Boolean,
+    @SerialName("gilded")
+    val gilded: Int,
+    @SerialName("clicked")
+    val clicked: Boolean,
+    @SerialName("subreddit_type")
+    val subredditType: String,
+    @SerialName("total_awards_received")
+    val totalAwardsReceived: Int,
+    @SerialName("is_meta")
+    val isMeta: Boolean,
+    @SerialName("score")
+    val score: Int,
+    @SerialName("edited")
+    val edited: Boolean,
+    @SerialName("thumbnail")
+    val thumbnail: String,
+    @SerialName("post_hint")
+    val postHint: String,
+    @SerialName("domain")
+    val domain: String,
+    @SerialName("can_gild")
+    val canGild: Boolean,
+    @SerialName("locked")
+    val locked: Boolean,
+    @SerialName("spoiler")
+    val spoiler: Boolean,
+    @SerialName("permalink")
+    val permalink: String,
+    @SerialName("stickied")
+    val stickied: Boolean,
 ): Thing(), Votable, Created {
     override fun kind(): Kind = Kind.Link
 }

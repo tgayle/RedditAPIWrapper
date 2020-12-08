@@ -4,6 +4,7 @@ import com.tgayle.DesignPatternsRedditAPI.BuildConfig
 import com.tgayle.reddit.RedditAPI
 import com.tgayle.reddit.auth.*
 import com.tgayle.reddit.models.ClientId
+import com.tgayle.reddit.models.ListingBuilderParams
 import com.tgayle.reddit.models.Reply
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
@@ -13,12 +14,13 @@ fun main() {
     runBlocking {
         val reddit =
 //            userlessAuthTest()
-//            installedAuthTest()
+            installedAuthTest()
 //            scriptAuthTest()
-            webappAuthTest()
+//            webappAuthTest()
 
-        frontPageExample(reddit)
+//        frontPageExample(reddit)
 //        commentsExample(reddit)
+        createCommentTest(reddit, "test")
     }
 }
 
@@ -144,4 +146,12 @@ suspend fun frontPageExample(reddit: RedditAPI) {
 //        }
 //        .collect()
 
+}
+
+private suspend fun createCommentTest(reddit: RedditAPI, body: String) {
+    val link = reddit.posts.getFrontPage(ListingBuilderParams(limit = 1)).first().first()
+    println("Got link ${link.title}:  ${link.permalink}")
+    with (reddit.posts) {
+        println(link.comment(body))
+    }
 }

@@ -6,12 +6,15 @@ import kotlinx.serialization.json.JsonBuilder
 import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Converter
 
-fun defaultJsonConverter(builder: JsonBuilder.() -> Unit = {}): Converter.Factory {
+fun defaultJsonConverter(builder: JsonBuilder.() -> Unit = {}): Json {
     val jsonConverter = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
+        classDiscriminator = "kind"
         this.builder()
-    }.asConverterFactory("application/json".toMediaType())
+    }
 
     return jsonConverter
 }
+
+fun Json.asJsonConverterFactory() = this.asConverterFactory("application/json".toMediaType())
