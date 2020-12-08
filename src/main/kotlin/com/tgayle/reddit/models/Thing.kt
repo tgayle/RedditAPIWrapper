@@ -92,11 +92,11 @@ data class Link(
     @SerialName("score")
     val score: Int,
     @SerialName("edited")
-    val edited: Boolean,
+    val edited: EditedState = EditedState.Unedited,
     @SerialName("thumbnail")
     val thumbnail: String,
     @SerialName("post_hint")
-    val postHint: String,
+    val postHint: String? = null,
     @SerialName("domain")
     val domain: String,
     @SerialName("can_gild")
