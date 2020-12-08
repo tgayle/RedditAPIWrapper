@@ -26,10 +26,6 @@ sealed class AuthenticationResult {
 sealed class AuthenticationStrategy(internal val clientId: ClientId, private val secret: String) {
     internal val authenticationService = AuthenticationService.defaultClient()
 
-    abstract suspend fun authenticate(): AuthenticationResult
-
-    internal open suspend fun refresh(): AuthenticationResult = authenticate()
-
     open fun basicAuthHeaders() = mutableMapOf(
             "Authorization" to "Basic " + "${clientId.id}:$secret".base64
     )
@@ -37,48 +33,30 @@ sealed class AuthenticationStrategy(internal val clientId: ClientId, private val
     abstract fun getClient(): RedditClient
 }
 
+sealed class NonOAuthStrategy(clientId: ClientId, secret: String): AuthenticationStrategy(clientId, secret) {
+    abstract suspend fun authenticate(): AuthenticationResult
+    internal open suspend fun refresh(): AuthenticationResult = authenticate()
+}
+
 
 typealias StateValidator = suspend (state: String) -> Boolean
 sealed class OAuthStrategy(clientId: ClientId, secret: String): AuthenticationStrategy(clientId, secret) {
     abstract fun getClient(username: String): RedditClient
     abstract suspend fun refresh(username: String): AuthenticationResult
-}
-
-
-class WebApp(clientId: ClientId, secret: String): OAuthStrategy(clientId, secret) {
-    override suspend fun authenticate(): AuthenticationResult {
-        TODO()
-    }
-
-    override fun getClient(): RedditClient {
-        TODO("Not yet implemented")
-    }
-
-    override fun getClient(username: String): RedditClient {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun refresh(username: String): AuthenticationResult {
-        TODO("Not yet implemented")
-    }
-
-}
-
-class InstalledApp(
-    clientId: ClientId,
-    private val redirectUri: String,
-    private val tokenStore: TokenStore = InMemoryTokenStore(),
-    private val validateAuthorization: StateValidator = { true }
-): OAuthStrategy(clientId, "") {
     enum class TokenDuration(val length: String) {
         Temporary("temporary"),
         Permanent("permanent")
     }
+}
 
-    override suspend fun authenticate(): AuthenticationResult {
-        error("Cannot authentication an Installed App without a code or redirect uri. See InstalledApp.authenticate(String) and InstalledApp.refresh(String)")
-    }
-
+abstract class BaseOAuthStrategy(
+    clientId: ClientId,
+    secret: String,
+    private val redirectUri: String,
+    private val tokenStore: TokenStore = InMemoryTokenStore(),
+    private val validateAuthorization: StateValidator = { true },
+    private val grantType: String
+): OAuthStrategy(clientId, secret) {
     override fun getClient(): RedditClient {
         error("Cannot get client without target user.")
     }
@@ -101,7 +79,7 @@ class InstalledApp(
     suspend fun authenticate(code: String): AuthenticationResult {
         val headers = basicAuthHeaders()
         val body = mapOf(
-            "grant_type" to "authorization_code",
+            "grant_type" to grantType,
             "code" to code,
             "redirect_uri" to redirectUri
         )
@@ -198,7 +176,35 @@ class InstalledApp(
     }
 }
 
-class Script(clientId: ClientId, secret: String, private val username: String, private val password: String): AuthenticationStrategy(clientId, secret) {
+
+class WebApp(clientId: ClientId,
+             secret: String,
+             redirectUri: String,
+             tokenStore: TokenStore = InMemoryTokenStore(),
+             validateAuthorization: StateValidator = { true }
+): BaseOAuthStrategy(clientId, secret, redirectUri, tokenStore, validateAuthorization, "authorization_code")
+
+class InstalledApp(
+    clientId: ClientId,
+    redirectUri: String,
+    tokenStore: TokenStore = InMemoryTokenStore(),
+    validateAuthorization: StateValidator = { true }
+): BaseOAuthStrategy(
+    clientId = clientId,
+    secret = "",
+    redirectUri = redirectUri,
+    tokenStore = tokenStore,
+    validateAuthorization = validateAuthorization,
+    /**
+     * Reddit's OAuth2 guide states that the implicit flow should use the `token` grant type, but this prevents
+     * receiving a refresh token to refresh the user's session, instead requiring explicit authorization from
+     * the user at the expiry of their current token. authorization_code is used below to allow refresh_token
+     * usage.
+     */
+    grantType = "authorization_code"
+)
+
+class Script(clientId: ClientId, secret: String, private val username: String, private val password: String): NonOAuthStrategy(clientId, secret) {
     override suspend fun authenticate(): AuthenticationResult {
         val headers = basicAuthHeaders()
         val body = mapOf(
@@ -225,7 +231,7 @@ class Script(clientId: ClientId, secret: String, private val username: String, p
     }
 }
 
-class Anonymous(clientId: ClientId, secret: String): AuthenticationStrategy(clientId, secret) {
+class Anonymous(clientId: ClientId, secret: String): NonOAuthStrategy(clientId, secret) {
 
     override suspend fun authenticate(): AuthenticationResult {
         val state = authenticationService.getAccessToken(

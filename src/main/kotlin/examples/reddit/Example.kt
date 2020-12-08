@@ -2,10 +2,7 @@ package examples.reddit
 
 import com.tgayle.DesignPatternsRedditAPI.BuildConfig
 import com.tgayle.reddit.RedditAPI
-import com.tgayle.reddit.auth.Anonymous
-import com.tgayle.reddit.auth.AuthenticationResult
-import com.tgayle.reddit.auth.InstalledApp
-import com.tgayle.reddit.auth.Script
+import com.tgayle.reddit.auth.*
 import com.tgayle.reddit.models.ClientId
 import com.tgayle.reddit.models.Reply
 import kotlinx.coroutines.flow.*
@@ -16,8 +13,9 @@ fun main() {
     runBlocking {
         val reddit =
 //            userlessAuthTest()
-            installedAuthTest()
+//            installedAuthTest()
 //            scriptAuthTest()
+            webappAuthTest()
 
         frontPageExample(reddit)
 //        commentsExample(reddit)
@@ -43,7 +41,29 @@ suspend fun installedAuthTest(): RedditAPI {
     val redirectUri = BuildConfig.INSTALLED_REDIRECT_URI
     val strategy = InstalledApp(id, redirectUri)
 
-    val url = strategy.getAuthorizationUrl(redirectUri)
+    val url = strategy.getAuthorizationUrl(redirectUri, duration = OAuthStrategy.TokenDuration.Permanent, compact = true)
+
+    println("Please login at this account and paste in the URL you're redirected to:")
+    println(url)
+
+    val authorizationUrl = readLine()!!
+
+    when (val result = strategy.onAuthorizationComplete(authorizationUrl)) {
+        is AuthenticationResult.Success -> {
+            return RedditAPI(result.client)
+        }
+        else -> {
+            error(result)
+        }
+    }
+}
+
+suspend fun webappAuthTest(): RedditAPI {
+    val id = ClientId(BuildConfig.WEB_CLIENT_ID)
+    val redirectUri = BuildConfig.WEB_REDIRECT_URI
+    val strategy = WebApp(id, BuildConfig.WEB_CLIENT_SECRET, redirectUri)
+
+    val url = strategy.getAuthorizationUrl(redirectUri, duration = OAuthStrategy.TokenDuration.Permanent, compact = false)
 
     println("Please login at this account and paste in the URL you're redirected to:")
     println(url)
