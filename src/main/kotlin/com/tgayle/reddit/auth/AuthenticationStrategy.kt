@@ -30,12 +30,12 @@ sealed class AuthenticationStrategy(internal val clientId: ClientId, private val
             "Authorization" to "Basic " + "${clientId.id}:$secret".base64
     )
 
-    abstract fun getClient(): RedditClient
 }
 
 sealed class NonOAuthStrategy(clientId: ClientId, secret: String): AuthenticationStrategy(clientId, secret) {
     abstract suspend fun authenticate(): AuthenticationResult
     internal open suspend fun refresh(): AuthenticationResult = authenticate()
+    abstract fun getClient(): RedditClient
 }
 
 
@@ -57,10 +57,6 @@ abstract class BaseOAuthStrategy(
     private val validateAuthorization: StateValidator = { true },
     private val grantType: String
 ): OAuthStrategy(clientId, secret) {
-    override fun getClient(): RedditClient {
-        error("Cannot get client without target user.")
-    }
-
     override fun getClient(username: String): RedditClient = getClient(username, null)
 
     private fun getClient(username: String, authState: AuthenticationState? = null): RedditClient {
