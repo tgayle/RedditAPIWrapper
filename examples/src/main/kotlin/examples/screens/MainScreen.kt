@@ -239,8 +239,12 @@ private fun MainTopBar(
         TopAppBar(
             title = { TopAppBarTitle(currentTab) },
             actions = {
+                Button(onClick = { nightMode.value = !nightMode.value }) {
+                    Text(text = if (nightMode.value) "Light" else "Dark")
+                }
+
                 IconButton(onClick = onAccountSwitcherSelected) {
-                    Icon(Icons.Default.AccountCircle, tint = Color.Black, modifier = Modifier
+                    Icon(Icons.Default.AccountCircle, modifier = Modifier
                         .padding(8.dp)
                         .size(32.dp))
                 }
@@ -290,11 +294,18 @@ private fun TopAppBarTitle(currentTab: RedditTabItem) {
     }
 }
 
+val nightMode = mutableStateOf(false)
 
 fun main() {
     val frame = JFrame()
     frame.title = "Reddit API Example"
-    frame.contentPane.add(ComposePanel().apply { setContent { MainScreen(frame) } })
+    frame.contentPane.add(ComposePanel().apply {
+        setContent {
+            MaterialTheme(colors = if (nightMode.value) darkColors() else lightColors()) {
+                MainScreen(frame)
+            }
+        }
+    })
 
     frame.isVisible = true
 }
