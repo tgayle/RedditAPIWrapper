@@ -147,7 +147,6 @@ abstract class BaseOAuthStrategy(
     }
 
     fun getAuthorizationUrl(
-        redirectUri: String,
         state: String = UUID.randomUUID().toString(),
         scopes: List<String> = RedditScope.allScopes(),
         compact: Boolean = false,
