@@ -35,7 +35,7 @@ interface RedditAPIService {
     suspend fun getFrontPage(@QueryMap query: Map<String, String>): Listing<Link>
 
     @GET("/r/{subreddit}/comments/{link_id}")
-    suspend fun getLink(@Path("subreddit") subreddit: String, @Path("link_id") postId: String): List<Listing<Thing>>
+    suspend fun getLink(@Path("subreddit") subreddit: String, @Path("link_id") postId: String, @Query("depth") depth: Int = 1): List<Listing<Thing>>
 
 
     @GET("/r/{subreddit}")

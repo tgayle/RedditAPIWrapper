@@ -23,8 +23,8 @@ class PostManager(private val client: RedditClient, private val service: RedditA
         }
     }
 
-    suspend fun getLink(subreddit: String, linkId: String) = client.ensureAuth {
-        service.getLink(subreddit, linkId).let { LinkWithComments(it.first().data.children.first().data as Link, it[1] as Listing<Reply>) }
+    suspend fun getLink(subreddit: String, linkId: String, commentDepth: Int = 1) = client.ensureAuth {
+        service.getLink(subreddit, linkId, commentDepth).let { LinkWithComments(it.first().data.children.first().data as Link, it[1] as Listing<Reply>) }
     }
 
     suspend fun Link.comment(body: String) = client.ensureAuth {
