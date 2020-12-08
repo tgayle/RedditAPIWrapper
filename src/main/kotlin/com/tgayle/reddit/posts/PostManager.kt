@@ -1,5 +1,6 @@
 package com.tgayle.reddit.posts
 
+import com.tgayle.reddit.RedditAPI
 import com.tgayle.reddit.RedditClient
 import com.tgayle.reddit.models.*
 import com.tgayle.reddit.net.RedditAPIService
@@ -19,9 +20,5 @@ class PostManager(private val client: RedditClient, private val service: RedditA
 
     suspend fun getLink(subreddit: String, linkId: String) = client.ensureAuth {
         service.getLink(subreddit, linkId).let { LinkWithComments(it.first().data.children.first().data as Link, it[1] as Listing<Reply>) }
-    }
-
-    suspend fun Link.comments() = client.ensureAuth {
-        service.getLink(subreddit, id)
     }
 }

@@ -12,6 +12,8 @@ data class AuthenticationState(
         val scope: String,
         @SerialName("expires_in")
         val expiresIn: Long,
+        @SerialName("refresh_token")
+        val refreshToken: String? = null,
 ) {
 
     val expirationTime = System.currentTimeMillis() + (expiresIn * 1000)

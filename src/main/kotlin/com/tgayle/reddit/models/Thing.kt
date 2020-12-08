@@ -129,7 +129,7 @@ sealed class Reply: Thing() {
         @SerialName("parent_id")
         val parentId: String? = null,
         @Serializable(CommentReplySerializer::class)
-        val replies: Listing<Thing>?,
+        val replies: Listing<Reply>?,
         val saved: Boolean,
         val score: Int,
         @SerialName("score_hidden")
@@ -157,3 +157,35 @@ sealed class Reply: Thing() {
     }
 }
 
+@Serializable
+@SerialName("t2")
+data class Account(
+    override val id: String,
+
+    @SerialName("comment_karma")
+    val commentKarma: Int,
+    @SerialName("has_name")
+    val hasName: Boolean? = null,
+    @SerialName("has_mod_mail")
+    val hasModMail: Boolean,
+    @SerialName("has_verified_email")
+    val hasVerifiedEmail: Boolean,
+    @SerialName("inbox_count")
+    val inboxCount: Int?,
+    @SerialName("is_friend")
+    val isFriend: Boolean? = null,
+    @SerialName("is_gold")
+    val isGold: Boolean,
+    @SerialName("is_mod")
+    val isMod: Boolean,
+    @SerialName("link_karma")
+    val linkKarma: Int,
+    @SerialName("name")
+    val username: String,
+    @SerialName("over_18")
+    val over18: Boolean,
+
+): Thing() {
+    override fun kind(): Kind = Kind.Account
+
+}

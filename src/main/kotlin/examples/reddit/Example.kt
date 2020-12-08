@@ -2,8 +2,9 @@ package examples.reddit
 
 import com.tgayle.DesignPatternsRedditAPI.BuildConfig
 import com.tgayle.reddit.RedditAPI
-import com.tgayle.reddit.RedditClient
 import com.tgayle.reddit.auth.Anonymous
+import com.tgayle.reddit.auth.AuthenticationResult
+import com.tgayle.reddit.auth.InstalledApp
 import com.tgayle.reddit.auth.Script
 import com.tgayle.reddit.models.ClientId
 import com.tgayle.reddit.models.Reply
@@ -12,44 +13,51 @@ import kotlinx.coroutines.runBlocking
 
 fun main() {
 
-//    val api = RedditAPI()
-
     runBlocking {
-//        frontPageExample(api)
+        val reddit =
+//            userlessAuthTest()
+            installedAuthTest()
+//            scriptAuthTest()
 
-//        commentsExample(api)
-
-//        scriptAuthTest(api)
-
-//        userlessAuthTest()
-
-        val reddit = userlessAuthTest()
-
-
-        commentsExample(reddit)
+        frontPageExample(reddit)
+//        commentsExample(reddit)
     }
 }
 
 suspend fun scriptAuthTest(): RedditAPI {
-    val auth = Script(BuildConfig.SCRIPT_CLIENT_SECRET, BuildConfig.SCRIPT_USERNAME, BuildConfig.SCRIPT_PASSWORD)
-    val api = RedditAPI(RedditClient(
-        ClientId(BuildConfig.SCRIPT_CLIENT_ID),
-        auth
-    ))
+    val auth = Script(ClientId(BuildConfig.SCRIPT_CLIENT_ID), BuildConfig.SCRIPT_CLIENT_SECRET, BuildConfig.SCRIPT_USERNAME, BuildConfig.SCRIPT_PASSWORD)
+    val api = RedditAPI(auth.getClient())
     
     api.authenticate().also(::println)
     return api
 }
 
 suspend fun userlessAuthTest(): RedditAPI {
-    val auth = Anonymous(BuildConfig.SCRIPT_CLIENT_SECRET)
-    val client = RedditClient(
-        ClientId(BuildConfig.SCRIPT_CLIENT_ID),
-        auth
-    )
-
-    val reddit = RedditAPI(client)
+    val auth = Anonymous(ClientId(BuildConfig.SCRIPT_CLIENT_ID), BuildConfig.SCRIPT_CLIENT_SECRET)
+    val reddit = RedditAPI(auth.getClient())
     return reddit
+}
+
+suspend fun installedAuthTest(): RedditAPI {
+    val id = ClientId(BuildConfig.INSTALLED_CLIENT_ID)
+    val redirectUri = BuildConfig.INSTALLED_REDIRECT_URI
+    val strategy = InstalledApp(id, redirectUri)
+
+    val url = strategy.getAuthorizationUrl(redirectUri)
+
+    println("Please login at this account and paste in the URL you're redirected to:")
+    println(url)
+
+    val authorizationUrl = readLine()!!
+
+    when (val result = strategy.onAuthorizationComplete(authorizationUrl)) {
+        is AuthenticationResult.Success -> {
+            return RedditAPI(result.client)
+        }
+        else -> {
+            error(result)
+        }
+    }
 }
 
 suspend fun subredditTest(reddit: RedditAPI) {
@@ -83,11 +91,35 @@ suspend fun commentsExample(api: RedditAPI) {
     """)
 }
 
+suspend fun idiomaticCommentsExample(api: RedditAPI) {
+    val (post, comments) = api.posts.getLink("askreddit", "jpfqtc")
+
+    with(api) {
+        val hint = comments.data.children.filterIsInstance<Reply.MoreComments>().first()
+//        hint.load()
+    }
+
+    println("""
+    ${post.title}
+    /r/${post.subreddit}
+        
+    Comments:
+    ${"\t"}${comments.joinToString("\n\n\t") {
+        when (it) {
+            is Reply.Comment -> "${it.body}\n\t\t/u/${it.author} - ${it.upvotes} upvotes"
+            is Reply.MoreComments -> "${it.count} more comments, ${it.depth} deep"
+        }
+    }}
+    """)
+}
+
 suspend fun frontPageExample(reddit: RedditAPI) {
-    //    reddit.posts.getFrontPage(ListingRequestParams(after = "t3_jon9iz", total = 30, limit = 10))
+        reddit.posts.getFrontPage()
+            .take(1)
+            .collect { page ->
+                page.forEach { link -> println(link.title) }
+            }
 //        .onEach {
-//            numLoaded += it.size
-//
 //            println("Loaded page! before=${it.first().name} after=${it.last().name} size=${it.size}")
 //        }
 //        .collect()
