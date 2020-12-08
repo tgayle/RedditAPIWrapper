@@ -2,9 +2,10 @@ package examples
 
 import androidx.compose.animation.animate
 import androidx.compose.desktop.Window
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumnFor
 import androidx.compose.foundation.lazy.LazyColumnForIndexed
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -19,7 +20,7 @@ import com.tgayle.reddit.RedditClient
 import com.tgayle.reddit.auth.Anonymous
 import com.tgayle.reddit.models.ClientId
 import com.tgayle.reddit.models.Link
-import com.tgayle.reddit.posts.ListingRequestParams
+import com.tgayle.reddit.models.ListingBuilderParams
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -39,15 +40,10 @@ private class Controller(val scope: CoroutineScope) {
     var currentSubreddit: String? by mutableStateOf(null)
 
     val api = RedditAPI(
-        RedditClient(
-            ClientId(BuildConfig.SCRIPT_CLIENT_ID),
-            Anonymous(
-                BuildConfig.SCRIPT_CLIENT_SECRET,
-            )
-        )
+            Anonymous(ClientId(BuildConfig.SCRIPT_CLIENT_ID), BuildConfig.SCRIPT_CLIENT_SECRET).getClient()
     )
 
-    private suspend fun linkLoader(params: ListingRequestParams = ListingRequestParams()): Flow<List<Link>> {
+    private suspend fun linkLoader(params: ListingBuilderParams = ListingBuilderParams()): Flow<List<Link>> {
         return currentSubreddit.let {
             if (it == null) {
                 api.posts.getFrontPage()
@@ -86,7 +82,7 @@ private class Controller(val scope: CoroutineScope) {
             loading = true
 
             posts = posts + withContext(Dispatchers.IO) {
-                linkLoader(ListingRequestParams(after = lastItem.name)).firstOrNull() ?: listOf()
+                linkLoader(ListingBuilderParams(after = lastItem.name)).firstOrNull() ?: listOf()
             }
 
             loading = false
@@ -149,11 +145,11 @@ private fun MyTopAppBar(
     currentSubreddit: String?
 ) {
     TopAppBar(
-        title = { Text(if (currentSubreddit == null) "Front Page" else "/r/$currentSubreddit") },
+        title = { Text(text = if (currentSubreddit == null) "Front Page" else "/r/$currentSubreddit") },
         actions = {
             IconButton(onClick = onRefreshClick) {
                 Image(
-                    asset = imageResource("refresh.png"),
+                    bitmap = imageResource("refresh.png"),
                     modifier = Modifier
                         .padding(8.dp)
                         .size(32.dp)
@@ -173,7 +169,7 @@ private fun PostList(
     onEndOfPageReached: (lastItem: Link) -> Unit = {}
 ) {
 
-    Stack(modifier) {
+    Box(modifier) {
         Column(
             modifier = Modifier
                 .matchParentSize()

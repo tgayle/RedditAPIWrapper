@@ -2,7 +2,7 @@ import org.jetbrains.compose.compose
 
 plugins {
     kotlin("jvm")
-    id("org.jetbrains.compose") version "0.2.0-build132"
+    id("org.jetbrains.compose") version "0.3.0-build134"
     application
 }
 
@@ -16,6 +16,8 @@ dependencies {
     implementation(kotlin("stdlib"))
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0")
+    implementation("io.ktor:ktor-client-core:1.4.0")
+    implementation("io.ktor:ktor-client-apache:1.4.0")
 
     implementation(rootProject)
     implementation(compose.desktop.currentOs)
