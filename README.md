@@ -4,19 +4,19 @@ This project will be developed as an entirely new and standalone project in the 
 This library serves as a wrapper around [Reddit](https://reddit.com), a internet forum.
 
 Features:
-- [ ] Sprint 1
+- [x] Sprint 1
   - [x] Load posts from reddit's front page
   - [x] Load posts from a subreddit
-  - [ ] Grab comments for a given post
-  - [ ] User authentication
+  - [x] Grab comments for a given post
+  - [x] User authentication
     - [x] Script Authentication
     - [x] Userless (Script) Authentication
-    - [ ] Userless (Installed) Authentication
-    - [ ] Installed App Authentication
-    - [ ] Web App Authentication
-- [ ] Sprint 2
-  - [ ] View content specific for a user.
-  - [ ] Create comments for posts
-  - [ ] Upvote and downvote reddit posts.
+    - [x] Userless (Installed) Authentication
+    - [x] Installed App Authentication
+    - [x] Web App Authentication
+- [x] Sprint 2
+  - [x] View content specific for a user.
+  - [x] Create comments for posts
+  - [x] Upvote and downvote reddit posts.
   
 The Reddit API is available at https://old.reddit.com/dev/api/
