@@ -1,13 +1,8 @@
 package examples.screens
 
 import androidx.compose.animation.animate
-import androidx.compose.desktop.AppWindowAmbient
 import androidx.compose.desktop.ComposePanel
-import androidx.compose.desktop.Window
-import androidx.compose.desktop.initCompose
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.currentTextStyle
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -16,14 +11,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.AmbientWindowManager
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.sun.net.httpserver.HttpServer
 import com.tgayle.DesignPatternsRedditAPI.BuildConfig
 import com.tgayle.reddit.RedditAPI
-import com.tgayle.reddit.RedditClient
 import com.tgayle.reddit.auth.Anonymous
 import com.tgayle.reddit.auth.AuthenticationResult
 import com.tgayle.reddit.auth.InstalledApp
@@ -239,8 +232,11 @@ private fun MainTopBar(
         TopAppBar(
             title = { TopAppBarTitle(currentTab) },
             actions = {
-                Button(onClick = { nightMode.value = !nightMode.value }) {
-                    Text(text = if (nightMode.value) "Light" else "Dark")
+                TextButton(onClick = { nightMode.value = !nightMode.value }) {
+                    Text(
+                        text = if (nightMode.value) "Light" else "Dark",
+                        color = if (nightMode.value) Color.White else Color.Black
+                    )
                 }
 
                 IconButton(onClick = onAccountSwitcherSelected) {
@@ -261,6 +257,7 @@ private fun MainTopBar(
         )
 
         RedditTabList(
+            modifier = Modifier.fillMaxWidth(),
             selectedTab = currentTab,
             tabs = tabs,
             onTabSelected = onTabSelected,

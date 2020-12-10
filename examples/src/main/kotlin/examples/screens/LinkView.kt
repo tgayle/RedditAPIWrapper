@@ -76,6 +76,7 @@ fun LinkHeader(link: Link) {
 
         LaunchedEffect(link) {
             loading = true
+            println("Thumbnail is ${link.thumbnail}")
 
             if (link.thumbnail == "self" || link.thumbnail == "default") {
                 loading = false

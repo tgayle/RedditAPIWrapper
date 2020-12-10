@@ -35,7 +35,7 @@ fun RedditTabList(
     onTabSelected: (tab: RedditTabItem) -> Unit,
     onTabRemoved: (RedditTabItem) -> Unit
 ) {
-    ScrollableTabRow(selectedTabIndex = tabs.indexOf(selectedTab), ) {
+    ScrollableTabRow(modifier = modifier, selectedTabIndex = tabs.indexOf(selectedTab), ) {
         tabs.map { item ->
             Tab(
                 selected = selectedTab == item,

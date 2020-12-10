@@ -1,7 +1,6 @@
 package com.tgayle.reddit.posts
 
-import com.tgayle.reddit.RedditAPI
-import com.tgayle.reddit.RedditClient
+import com.tgayle.RedditClient
 import com.tgayle.reddit.models.*
 import com.tgayle.reddit.net.RedditAPIService
 import com.tgayle.reddit.net.defaultJsonConverter

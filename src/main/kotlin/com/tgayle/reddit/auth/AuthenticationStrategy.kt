@@ -1,6 +1,6 @@
 package com.tgayle.reddit.auth
 
-import com.tgayle.reddit.RedditClient
+import com.tgayle.RedditClient
 import com.tgayle.reddit.models.ClientId
 import com.tgayle.reddit.models.RedditScope
 import com.tgayle.reddit.net.AuthenticationService
@@ -60,7 +60,7 @@ abstract class BaseOAuthStrategy(
     override fun getClient(username: String): RedditClient = getClient(username, null)
 
     private fun getClient(username: String, authState: AuthenticationState? = null): RedditClient {
-        return object: RedditClient(this, authState) {
+        return object: RedditClient(authState) {
             override suspend fun authenticateForToken(): AuthenticationResult {
                 return refreshForToken()
             }
@@ -213,7 +213,7 @@ class Script(clientId: ClientId, secret: String, private val username: String, p
     }
 
     override fun getClient(): RedditClient {
-        return object: RedditClient(this) {
+        return object: RedditClient() {
             override suspend fun authenticateForToken(): AuthenticationResult {
                 return this@Script.authenticate()
             }
@@ -240,7 +240,7 @@ class Anonymous(clientId: ClientId, secret: String): NonOAuthStrategy(clientId, 
     }
 
     override fun getClient(): RedditClient {
-        return object: RedditClient(this) {
+        return object: RedditClient() {
             override suspend fun authenticateForToken(): AuthenticationResult {
                 return this@Anonymous.authenticate()
             }
