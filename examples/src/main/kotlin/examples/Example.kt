@@ -16,7 +16,6 @@ import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.unit.dp
 import com.tgayle.DesignPatternsRedditAPI.BuildConfig
 import com.tgayle.reddit.RedditAPI
-import com.tgayle.reddit.RedditClient
 import com.tgayle.reddit.auth.Anonymous
 import com.tgayle.reddit.models.ClientId
 import com.tgayle.reddit.models.Link
